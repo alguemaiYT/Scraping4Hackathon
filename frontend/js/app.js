@@ -7,7 +7,7 @@ function initCharts() {
   const common = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: true, labels: { color: "#e8edf4" } } },
     scales: {
       x: { ticks: { color: "#8b9cb3", maxTicksLimit: 8 } },
       y: { ticks: { color: "#8b9cb3" } },
@@ -16,19 +16,19 @@ function initCharts() {
 
   charts.temperature = new Chart(document.getElementById("chart-temperature"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Temperatura (°C)", data: [], borderColor: "#3b82f6", tension: 0.3 }] },
-    options: { ...common, plugins: { legend: { display: true, labels: { color: "#e8edf4" } } } },
+    data: { labels: [], datasets: [{ label: "Aulas Ativas", data: [], borderColor: "#3b82f6", tension: 0.3 }] },
+    options: common,
   });
 
   charts.wind = new Chart(document.getElementById("chart-wind"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Vento (km/h)", data: [], borderColor: "#22c55e", tension: 0.3 }] },
+    data: { labels: [], datasets: [{ label: "Eventos Acadêmicos", data: [], borderColor: "#22c55e", tension: 0.3 }] },
     options: common,
   });
 
   charts.humidity = new Chart(document.getElementById("chart-humidity"), {
     type: "line",
-    data: { labels: [], datasets: [{ label: "Umidade (%)", data: [], borderColor: "#f59e0b", tension: 0.3 }] },
+    data: { labels: [], datasets: [{ label: "Notícias do Portal", data: [], borderColor: "#f59e0b", tension: 0.3 }] },
     options: common,
   });
 }
@@ -60,9 +60,9 @@ function updateMetrics(data) {
   if (!data) return;
   const m = data.metrics || {};
   document.getElementById("metric-temperature").textContent =
-    m.temperature ? m.temperature.value.toFixed(1) : "—";
+    m.temperature ? m.temperature.value.toFixed(0) : "—";
   document.getElementById("metric-wind").textContent =
-    m.wind_speed ? m.wind_speed.value.toFixed(1) : "—";
+    m.wind_speed ? m.wind_speed.value.toFixed(0) : "—";
   document.getElementById("metric-humidity").textContent =
     m.humidity ? m.humidity.value.toFixed(0) : "—";
   document.getElementById("metric-updated").textContent = formatDate(data.recorded_at);

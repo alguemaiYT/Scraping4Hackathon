@@ -22,13 +22,13 @@ def create_db_tools(session: AsyncSession) -> list[Any]:
         return f"Última atualização: {latest.recorded_at.isoformat()}"
 
     @tool
-    async def consultar_temperatura_maxima_hoje() -> str:
-        """Retorna a temperatura mais alta registrada hoje."""
+    async def consultar_aulas_maximas_hoje() -> str:
+        """Retorna o maior número de aulas simultâneas registradas hoje."""
         repo = EventRepository(session)
-        max_temp = await repo.get_max_metric_today("temperature")
-        if max_temp is None:
-            return "Nenhuma temperatura registrada hoje."
-        return f"Temperatura máxima hoje: {max_temp}°C"
+        max_aulas = await repo.get_max_metric_today("temperature")
+        if max_aulas is None:
+            return "Nenhuma aula registrada hoje."
+        return f"Maior número de aulas simultâneas hoje: {max_aulas} aulas"
 
     @tool
     async def consultar_dados_recentes(horas: int = 2) -> str:
@@ -39,8 +39,8 @@ def create_db_tools(session: AsyncSession) -> list[Any]:
             return f"Nenhum dado nas últimas {horas} hora(s)."
         lines = []
         for r in records[:20]:
-            metrics = ", ".join(f"{m.metric_key}={m.metric_value}{m.unit}" for m in r.metrics)
+            metrics = ", ".join(f"{m.metric_key}={m.metric_value} {m.unit}" for m in r.metrics)
             lines.append(f"{r.recorded_at.isoformat()}: {metrics}")
         return "\n".join(lines)
 
-    return [consultar_ultima_atualizacao, consultar_temperatura_maxima_hoje, consultar_dados_recentes]
+    return [consultar_ultima_atualizacao, consultar_aulas_maximas_hoje, consultar_dados_recentes]

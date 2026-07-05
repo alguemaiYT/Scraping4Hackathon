@@ -11,9 +11,9 @@ from config.settings import Settings
 from database.repository import EventRepository
 
 
-SYSTEM_PROMPT = """Você é um assistente acadêmico local.
+SYSTEM_PROMPT = """Você é um assistente acadêmico local da UNESP Bauru.
 Responda em português com base exclusivamente no contexto fornecido.
-Os dados representam "horários e eventos acadêmicos" simulados (temperatura, vento, umidade).
+Os dados representam aulas ativas, eventos acadêmicos e notícias da UNESP.
 Se não houver dados suficientes, informe claramente.
 Seja conciso e objetivo."""
 
@@ -95,11 +95,56 @@ class AcademicAgent:
                     return f"A última atualização foi em {latest.recorded_at.strftime('%d/%m/%Y %H:%M:%S')}."
                 return "Ainda não há atualizações registradas."
 
+        if "aula" in q or "grade" in q or "horário" in q or "horario" in q:
+            latest = await repo.get_latest_update()
+            if latest:
+                active_classes = latest.raw_payload.get("active_classes", []) if latest.raw_payload else []
+                upcoming_classes = latest.raw_payload.get("upcoming_classes", []) if latest.raw_payload else []
+                
+                resp = []
+                if active_classes:
+                    resp.append("Aulas ativas neste momento:")
+                    for c in active_classes:
+                        resp.append(f"  • {c['subject']} com {c['teacher']} na {c['room']}")
+                else:
+                    resp.append("Não há aulas ativas no momento.")
+                    
+                if upcoming_classes:
+                    resp.append("\nPróximas aulas de hoje:")
+                    for c in upcoming_classes[:3]:
+                        # c['time'] is (start, end)
+                        resp.append(f"  • {c['subject']} das {int(c['time'][0])}h às {int(c['time'][1])}h ({c['room']})")
+                return "\n".join(resp)
+            return "Não há dados de aulas no momento."
+
+        if "evento" in q or "acontece" in q:
+            latest = await repo.get_latest_update()
+            if latest and latest.raw_payload:
+                news = latest.raw_payload.get("news", [])
+                eventos = [n for n in news if any("acontece" in c.lower() or "evento" in c.lower() for c in n.get("categories", []))]
+                if eventos:
+                    resp = ["Eventos acadêmicos recentes no portal:"]
+                    for ev in eventos[:5]:
+                        resp.append(f"  • {ev['title']} ({ev['link']})")
+                    return "\n".join(resp)
+            return "Nenhum evento acadêmico recente encontrado."
+
+        if "notícia" in q or "noticia" in q or "jornal" in q:
+            latest = await repo.get_latest_update()
+            if latest and latest.raw_payload:
+                news = latest.raw_payload.get("news", [])
+                if news:
+                    resp = ["Últimas notícias do Jornal da Unesp:"]
+                    for n in news[:5]:
+                        resp.append(f"  • {n['title']} (Categoria: {', '.join(n.get('categories', []))})")
+                    return "\n".join(resp)
+            return "Nenhuma notícia encontrada."
+
         if "temperatura" in q and ("alta" in q or "máxima" in q or "maxima" in q):
-            max_temp = await repo.get_max_metric_today("temperature")
-            if max_temp is not None:
-                return f"A temperatura mais alta registrada hoje foi {max_temp}°C."
-            return "Não há registros de temperatura para hoje."
+            max_val = await repo.get_max_metric_today("temperature")
+            if max_val is not None:
+                return f"O maior número de aulas simultâneas registradas hoje foi {max_val} aulas."
+            return "Não há registros de aulas para hoje."
 
         hours_match = re.search(r"(\d+)\s*hora", q)
         if hours_match or "últimas" in q or "ultimas" in q:
@@ -111,10 +156,10 @@ class AcademicAgent:
             for r in records[:10]:
                 parts = []
                 for m in r.metrics:
-                    label = {"temperature": "Temp", "wind_speed": "Vento", "humidity": "Umidade"}.get(
+                    label = {"temperature": "Aulas Ativas", "wind_speed": "Eventos Acadêmicos", "humidity": "Notícias"}.get(
                         m.metric_key, m.metric_key
                     )
-                    parts.append(f"{label}: {m.metric_value}{m.unit}")
+                    parts.append(f"{label}: {m.metric_value} {m.unit}")
                 lines.append(f"  • {r.recorded_at.strftime('%H:%M:%S')} — {', '.join(parts)}")
             if len(records) > 10:
                 lines.append(f"  ... e mais {len(records) - 10} registro(s).")
@@ -123,7 +168,7 @@ class AcademicAgent:
         latest = await repo.get_latest_update()
         if latest:
             metrics_text = ", ".join(
-                f"{m.metric_key}: {m.metric_value}{m.unit}" for m in latest.metrics
+                f"{metric_display_name(m.metric_key)}: {m.metric_value} {m.unit}" for m in latest.metrics
             )
             return (
                 f"Com base nos dados mais recentes ({latest.recorded_at.strftime('%d/%m/%Y %H:%M')}): "
@@ -134,3 +179,11 @@ class AcademicAgent:
             "Não há dados suficientes no banco para responder. "
             "Aguarde o coletor registrar atualizações."
         )
+
+
+def metric_display_name(key: str) -> str:
+    return {
+        "temperature": "Aulas Ativas",
+        "wind_speed": "Eventos Acadêmicos",
+        "humidity": "Notícias",
+    }.get(key, key)

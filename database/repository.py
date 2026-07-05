@@ -167,7 +167,7 @@ class EventRepository:
         result = await self.session.execute(stmt)
         documents: list[dict[str, Any]] = []
         for update in result.scalars().all():
-            metrics = {m.metric_key: f"{m.metric_value}{m.unit}" for m in update.metrics}
+            metrics = {m.metric_key: f"{m.metric_value} {m.unit}" for m in update.metrics}
             documents.append(
                 {
                     "id": update.id,
@@ -186,11 +186,11 @@ class EventRepository:
             parts.append(f"Local: {update.location.name}")
         for metric in update.metrics:
             label = {
-                "temperature": "Temperatura",
-                "wind_speed": "Velocidade do vento",
-                "humidity": "Umidade",
+                "temperature": "Aulas Ativas",
+                "wind_speed": "Eventos Acadêmicos",
+                "humidity": "Notícias",
             }.get(metric.metric_key, metric.metric_key)
-            parts.append(f"{label}: {metric.metric_value}{metric.unit}")
+            parts.append(f"{label}: {metric.metric_value} {metric.unit}")
         return " | ".join(parts)
 
     async def get_max_metric_today(self, metric_key: str) -> Decimal | None:

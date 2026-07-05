@@ -3,7 +3,7 @@
 import asyncio
 import signal
 
-from collector.open_meteo import OpenMeteoSource
+from collector.university_api import UniversityApiSource
 from collector.scheduler import CollectorScheduler
 from config.settings import get_settings
 from database.connection import close_db, get_engine, init_db
@@ -24,9 +24,8 @@ async def main() -> None:
     cache = CacheService(settings)
     await cache.connect()
 
-    data_source = OpenMeteoSource(
+    data_source = UniversityApiSource(
         base_url=settings.data_source_base_url,
-        source_name=settings.data_source_name,
     )
 
     scheduler = CollectorScheduler(

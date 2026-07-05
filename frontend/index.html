@@ -10,8 +10,8 @@
 <body>
   <header class="header">
     <div class="header__brand">
-      <h1>Assistente Acadêmico Local</h1>
-      <p class="subtitle">Monitoramento de eventos acadêmicos em tempo real</p>
+      <h1>Assistente Acadêmico Local (UNESP)</h1>
+      <p class="subtitle">Monitoramento em tempo real de aulas, eventos e notícias da UNESP Bauru</p>
     </div>
     <div class="header__status" id="connection-status">
       <span class="dot dot--loading"></span>
@@ -22,19 +22,19 @@
   <main class="container">
     <section class="cards">
       <article class="card">
-        <h3>Temperatura</h3>
+        <h3>Aulas Ativas (BCC)</h3>
         <p class="metric" id="metric-temperature">—</p>
-        <span class="unit">°C</span>
+        <span class="unit">aulas</span>
       </article>
       <article class="card">
-        <h3>Velocidade do Vento</h3>
+        <h3>Eventos Acadêmicos</h3>
         <p class="metric" id="metric-wind">—</p>
-        <span class="unit">km/h</span>
+        <span class="unit">eventos</span>
       </article>
       <article class="card">
-        <h3>Umidade</h3>
+        <h3>Notícias do Portal</h3>
         <p class="metric" id="metric-humidity">—</p>
-        <span class="unit">%</span>
+        <span class="unit">notícias</span>
       </article>
       <article class="card">
         <h3>Última Atualização</h3>
@@ -55,7 +55,7 @@
     </section>
 
     <section class="panel">
-      <h2>Gráficos — Últimas 2 horas</h2>
+      <h2>Gráficos — Histórico Recente</h2>
       <div class="charts">
         <canvas id="chart-temperature"></canvas>
         <canvas id="chart-wind"></canvas>
@@ -68,7 +68,7 @@
       <div class="chat">
         <div id="chat-messages" class="chat__messages"></div>
         <form id="chat-form" class="chat__form">
-          <input type="text" id="chat-input" placeholder="Ex: Qual foi a temperatura mais alta hoje?" autocomplete="off">
+          <input type="text" id="chat-input" placeholder="Ex: Quais são as aulas ativas agora?" autocomplete="off">
           <button type="submit">Perguntar</button>
         </form>
       </div>
@@ -76,7 +76,7 @@
   </main>
 
   <footer class="footer">
-    <p>Atualização automática a cada 5 segundos · Dados via Open-Meteo (simulação acadêmica)</p>
+    <p>Atualização automática a cada 5 segundos · Dados oficiais da UNESP (Jornal e Aulas)</p>
   </footer>
 
   <script src="/static/js/app.js"></script>

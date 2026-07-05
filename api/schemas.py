@@ -23,7 +23,7 @@ def serialize_update(update: EventUpdate) -> dict[str, Any]:
 
 def metric_display_name(key: str) -> str:
     return {
-        "temperature": "Temperatura",
-        "wind_speed": "Velocidade do vento",
-        "humidity": "Umidade",
+        "temperature": "Aulas Ativas",
+        "wind_speed": "Eventos Acadêmicos",
+        "humidity": "Notícias",
     }.get(key, key)
