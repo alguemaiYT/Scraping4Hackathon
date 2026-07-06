@@ -1,82 +1,181 @@
-# Scraping4Hackathon — Coletor e API de Dados Acadêmicos (UNESP Sorocaba)
+# Assistente Acadêmico Local
 
-Este repositório contém o sistema completo de coleta de dados acadêmicos em tempo real, persistência e API REST desenvolvido para alimentar o banco de dados da **MINA (Assistente Virtual)**. O sistema foi concebido para coletar programaticamente dados do Portal da UNESP Sorocaba (Jornal, horários e locais) e expô-los através de uma API ágil de alto desempenho.
+Sistema completo de assistente acadêmico baseado em IA para **Linux (Ubuntu 24.04+)**, com coleta de dados em tempo real, persistência em PostgreSQL, cache Redis, API FastAPI, agente LangChain com RAG e dashboard web.
 
----
+> **Nota:** Os dados da API [Open-Meteo](https://open-meteo.com) simulam *horários e eventos acadêmicos* (temperatura, vento, umidade e horário de atualização).
 
-## 🛠️ Recursos e Tecnologias
-
-* **Coletor Assíncrono (Collector):** Robô de raspagem assíncrono desenvolvido com `aiohttp` e `Playwright` para navegar, coletar e formatar notícias, eventos e grades horárias sem sobrecarregar o portal.
-* **Persistência de Dados (Database):** Armazenamento estruturado usando **PostgreSQL** com ORM SQLAlchemy para logs e histórico.
-* **API de Alto Desempenho (API):** Desenvolvida em **FastAPI**, fornecendo rotas rápidas e documentação interativa (Swagger UI) para consumo da Mina.
-* **RAG & Agent (IA):** Agente inteligente construído com **LangChain** para busca semântica em linguagem natural sobre o mural de notícias raspado.
-* **Cache em Memória (Redis):** Cache temporário para reduzir latência de requisições concorrentes.
-* **Dashboard Web:** Interface interativa básica para monitoramento das tabelas e do status do coletor.
-* **Dockerizado:** Orquestração completa usando `docker-compose` para fácil implantação e portabilidade.
-
----
-
-## 📂 Estrutura do Repositório
+## Arquitetura
 
 ```
 Scraping4Hackathon/
-├── collector/          # Robôs de coleta assíncrona (scraping/APIs)
-│   ├── base.py           # Interface base para coletores
-│   ├── open_meteo.py     # Coletor de testes e clima
-│   ├── university_api.py # Conexão direta com APIs internas
-│   └── scheduler.py      # Agendador de raspagem periódica
-├── database/           # Modelos de banco de dados (PostgreSQL + SQLAlchemy)
-├── api/                # Rotas FastAPI e lógica de respostas
-├── agent/              # Busca semântica e RAG com LangChain
-├── frontend/           # Painel de controle web para monitoramento
-├── docker/             # Dockerfiles de infraestrutura
-├── config/             # Configurações dinâmicas via Pydantic Settings
-├── shared/             # Gerenciamento de Cache Redis e logs
-├── tests/              # Testes unitários com pytest
-└── docker-compose.yml  # Orquestração do banco, redis, API e coletor
+├── collector/          # Coleta assíncrona (aiohttp)
+│   ├── base.py           # Interface abstrata (API / scraper / portal)
+│   ├── open_meteo.py     # Implementação atual
+│   ├── university_api.py # Stub para APIs universitárias
+│   ├── university_portal.py # Stub Playwright
+│   └── scheduler.py      # Loop a cada 30s
+├── database/           # PostgreSQL + SQLAlchemy
+├── api/                # FastAPI + rotas REST
+├── agent/              # LangChain + RAG
+├── frontend/           # Dashboard HTML/CSS/JS
+├── docker/             # Dockerfiles
+├── config/             # Settings (pydantic-settings)
+├── shared/             # Cache Redis, logging
+├── tests/              # pytest
+└── scripts/            # install_linux.sh
 ```
 
----
+```mermaid
+flowchart LR
+    OM[Open-Meteo API] --> COL[Collector]
+    COL --> PG[(PostgreSQL)]
+    COL --> RD[(Redis)]
+    PG --> API[FastAPI]
+    RD --> API
+    PG --> AG[Agente LangChain]
+    API --> FE[Dashboard Web]
+    AG --> API
+```
 
-## 🚀 Instalação e Execução
+## Requisitos
 
-### 1. Requisitos Mínimos
-* Linux (Ubuntu 20.04+ / Debian) ou macOS/Windows com suporte a Docker.
-* Docker e Docker Compose v2 instalados.
-* Python 3.12 (opcional para desenvolvimento local).
+- Ubuntu 24.04 ou derivado
+- Python 3.12
+- Docker e Docker Compose v2
+- 2 GB RAM mínimo
 
-### 2. Configurar Variáveis de Ambiente
-Copie o arquivo `.env.example` e crie a sua configuração:
+## Instalação rápida (Linux)
+
 ```bash
+git clone <seu-repositorio>
+cd Scraping4Hackathon
+chmod +x scripts/install_linux.sh
+./scripts/install_linux.sh
+```
+
+## Instalação manual
+
+```bash
+# 1. Clonar e configurar
 cp .env.example .env
-```
 
-### 3. Subir com Docker Compose
-O comando abaixo baixa as imagens, compila e inicia todos os serviços (PostgreSQL, Redis, Coletor e API FastAPI):
-```bash
+# 2. Subir infraestrutura
 docker compose up -d --build
-```
 
-### 4. Verificar Status
-```bash
-docker compose logs -f api
+# 3. Verificar logs
 docker compose logs -f collector
+docker compose logs -f api
 ```
 
----
+Acesse:
 
-## 🔗 Endpoints Principais da API
+| Recurso | URL |
+|---------|-----|
+| Dashboard | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| Status | http://localhost:8000/status |
 
-Após inicializado, a API estará acessível em `http://localhost:8000`.
+## Endpoints da API
 
-| Rota | Método | Descrição |
-| :--- | :--- | :--- |
-| `/status` | `GET` | Status de integridade do coletor, PostgreSQL e Redis |
-| `/dados-atuais` | `GET` | Últimos dados e notícias acadêmicas raspadas |
-| `/historico` | `GET` | Histórico paginado dos dados coletados |
-| `/agente/perguntar` | `POST` | Pergunta ao agente de IA RAG sobre as notícias da UNESP |
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/status` | Status do coletor, banco e cache |
+| GET | `/dados-atuais` | Dados mais recentes |
+| GET | `/historico?limit=50&offset=0` | Histórico paginado |
+| GET | `/ultimas-atualizacoes?hours=2` | Registros das últimas N horas |
+| POST | `/agente/perguntar` | Pergunta em linguagem natural |
 
----
+Exemplo:
 
-## 🤝 Integração com o Projeto MINA
-A assistente virtual **MINA** faz requisições periódicas para o endpoint `/dados-atuais` desta API e sincroniza os dados recebidos com o banco de dados SQLite interno local da TV Box/Orange Pi, mantendo a assistente atualizada mesmo rodando de forma 100% offline posterior.
+```bash
+curl http://localhost:8000/dados-atuais
+
+curl -X POST http://localhost:8000/agente/perguntar \
+  -H "Content-Type: application/json" \
+  -d '{"pergunta": "Qual foi a última atualização?"}'
+```
+
+## Agente de IA (LangChain)
+
+Configure no `.env`:
+
+```env
+# Modo mock (padrão) — respostas determinísticas sem LLM externo
+LLM_PROVIDER=mock
+
+# Ollama local
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
+# OpenAI
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Exemplos de perguntas:
+
+- *Qual foi a temperatura mais alta hoje?*
+- *Qual foi a última atualização?*
+- *Mostre os dados das últimas 2 horas.*
+
+## Desenvolvimento local (sem Docker)
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+
+# Ajuste POSTGRES_HOST=localhost e REDIS_HOST=localhost no .env
+# Suba apenas postgres e redis:
+docker compose up -d postgres redis
+
+# Terminal 1 — API
+uvicorn api.main:app --reload
+
+# Terminal 2 — Coletor
+python -m collector.main
+```
+
+## Testes
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest -v --cov=collector --cov=database --cov=api --cov=agent
+```
+
+## Substituir Open-Meteo por fonte universitária
+
+1. Implemente `AcademicDataSource` em `collector/university_api.py` ou `collector/university_portal.py`.
+2. Altere `collector/main.py`:
+
+```python
+# De:
+data_source = OpenMeteoSource(...)
+
+# Para:
+from collector.university_api import UniversityApiSource
+data_source = UniversityApiSource(base_url="...", api_key="...")
+```
+
+A interface `AcademicDataSource` garante que métricas, histórico, RAG e dashboard continuem funcionando.
+
+## Variáveis de ambiente
+
+Consulte `.env.example` para a lista completa. Principais:
+
+| Variável | Default | Descrição |
+|----------|---------|-----------|
+| `COLLECTOR_INTERVAL_SECONDS` | 30 | Intervalo de coleta |
+| `COLLECTOR_LATITUDE` | -23.5505 | Latitude do campus |
+| `COLLECTOR_LONGITUDE` | -46.6333 | Longitude do campus |
+| `POSTGRES_*` | — | Conexão PostgreSQL |
+| `REDIS_*` | — | Conexão Redis |
+| `LLM_PROVIDER` | mock | Provedor do agente IA |
+
+## Licença
+
+MIT
