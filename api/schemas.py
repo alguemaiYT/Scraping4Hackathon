@@ -18,6 +18,7 @@ def serialize_update(update: EventUpdate) -> dict[str, Any]:
         "collected_at": update.collected_at.isoformat(),
         "location": update.location.name if update.location else None,
         "metrics": metrics,
+        "raw_payload": update.raw_payload,
     }
 
 
