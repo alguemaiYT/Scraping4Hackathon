@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     python3-dev \
+    cargo \
+    rustc \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
